@@ -1,98 +1,333 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import React from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+} from 'react-native';
+import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import { Colors, ChequeColors } from '@/constants/theme';
+import { mockCheques } from '@/data/mockCheques';
+import { StatCard } from '@/components/cheque/stat-card';
+import { ChequeCard } from '@/components/cheque/cheque-card';
+import { formatCurrency } from '@/utils/currency.utils';
+import { isUpcoming } from '@/utils/date.utils';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+export default function DashboardScreen() {
+  const router = useRouter();
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme ?? 'light'];
+  const chequeColors = ChequeColors[colorScheme ?? 'light'];
 
-export default function HomeScreen() {
+  // Calculate statistics
+  const pendingCheques = mockCheques.filter((c) => c.status === 'pending');
+  const overdueCheques = mockCheques.filter((c) => c.status === 'overdue');
+
+  const currentMonth = new Date().getMonth();
+  const currentYear = new Date().getFullYear();
+  const settledThisMonth = mockCheques.filter(
+    (c) =>
+      c.status === 'settled' &&
+      c.dateCreated.getMonth() === currentMonth &&
+      c.dateCreated.getFullYear() === currentYear
+  );
+
+  const totalPendingAmount = pendingCheques.reduce(
+    (sum, c) => sum + c.amount,
+    0
+  );
+  const totalOverdueAmount = overdueCheques.reduce(
+    (sum, c) => sum + c.amount,
+    0
+  );
+  const totalSettledAmount = settledThisMonth.reduce(
+    (sum, c) => sum + c.amount,
+    0
+  );
+
+  // Get upcoming cheques (next 7 days)
+  const upcomingCheques = mockCheques
+    .filter((c) => c.status !== 'settled' && isUpcoming(c.settlementDate))
+    .sort((a, b) => a.settlementDate.getTime() - b.settlementDate.getTime())
+    .slice(0, 4);
+
+  // Calculate total incoming vs outgoing
+  const totalIncoming = mockCheques
+    .filter((c) => c.type === 'incoming' && c.status !== 'settled')
+    .reduce((sum, c) => sum + c.amount, 0);
+  const totalOutgoing = mockCheques
+    .filter((c) => c.type === 'outgoing' && c.status !== 'settled')
+    .reduce((sum, c) => sum + c.amount, 0);
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+    <ScrollView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      showsVerticalScrollIndicator={false}
+    >
+      <View style={styles.header}>
+        <Text style={[styles.title, { color: colors.text }]}>Dashboard</Text>
+        <Text style={[styles.subtitle, { color: colors.icon }]}>
+          Track your cheques at a glance
+        </Text>
+      </View>
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.statsContainer}
+      >
+        <StatCard
+          title="Pending"
+          count={pendingCheques.length}
+          amount={totalPendingAmount}
+          icon="time-outline"
+          color={chequeColors.pending}
+        />
+        <StatCard
+          title="Overdue"
+          count={overdueCheques.length}
+          amount={totalOverdueAmount}
+          icon="alert-circle-outline"
+          color={chequeColors.overdue}
+        />
+        <StatCard
+          title="Settled This Month"
+          count={settledThisMonth.length}
+          amount={totalSettledAmount}
+          icon="checkmark-circle-outline"
+          color={chequeColors.settled}
+        />
+      </ScrollView>
+
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            Upcoming Cheques
+          </Text>
+          <TouchableOpacity
+            onPress={() => router.push('/(tabs)/cheques')}
+            style={styles.viewAllButton}
+          >
+            <Text style={[styles.viewAllText, { color: colors.tint }]}>
+              View All
+            </Text>
+            <Ionicons name="chevron-forward" size={16} color={colors.tint} />
+          </TouchableOpacity>
+        </View>
+
+        {upcomingCheques.length > 0 ? (
+          <View style={styles.upcomingList}>
+            {upcomingCheques.map((cheque) => (
+              <ChequeCard
+                key={cheque.id}
+                cheque={cheque}
+                onPress={() => router.push(`/cheque/${cheque.id}`)}
+              />
+            ))}
+          </View>
+        ) : (
+          <View
+            style={[
+              styles.emptyCard,
+              { backgroundColor: chequeColors.card },
+            ]}
+          >
+            <Ionicons
+              name="calendar-outline"
+              size={32}
+              color={colors.icon}
+            />
+            <Text style={[styles.emptyText, { color: colors.icon }]}>
+              No upcoming cheques in the next 7 days
+            </Text>
+          </View>
+        )}
+      </View>
+
+      <View style={styles.section}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>
+          Quick Stats
+        </Text>
+        <View
+          style={[
+            styles.quickStatsCard,
+            { backgroundColor: chequeColors.card },
+          ]}
+        >
+          <View style={styles.quickStatRow}>
+            <View style={styles.quickStatItem}>
+              <View style={styles.quickStatHeader}>
+                <Ionicons
+                  name="arrow-down"
+                  size={20}
+                  color={chequeColors.incoming}
+                />
+                <Text style={[styles.quickStatLabel, { color: colors.icon }]}>
+                  Total Incoming
+                </Text>
+              </View>
+              <Text
+                style={[
+                  styles.quickStatAmount,
+                  { color: chequeColors.incoming },
+                ]}
+              >
+                {formatCurrency(totalIncoming)}
+              </Text>
+            </View>
+
+            <View style={styles.quickStatDivider} />
+
+            <View style={styles.quickStatItem}>
+              <View style={styles.quickStatHeader}>
+                <Ionicons
+                  name="arrow-up"
+                  size={20}
+                  color={chequeColors.outgoing}
+                />
+                <Text style={[styles.quickStatLabel, { color: colors.icon }]}>
+                  Total Outgoing
+                </Text>
+              </View>
+              <Text
+                style={[
+                  styles.quickStatAmount,
+                  { color: chequeColors.outgoing },
+                ]}
+              >
+                {formatCurrency(totalOutgoing)}
+              </Text>
+            </View>
+          </View>
+
+          <View style={[styles.netRow, { borderTopColor: chequeColors.border }]}>
+            <Text style={[styles.netLabel, { color: colors.icon }]}>
+              Net Position
+            </Text>
+            <Text
+              style={[
+                styles.netAmount,
+                {
+                  color:
+                    totalIncoming - totalOutgoing >= 0
+                      ? chequeColors.incoming
+                      : chequeColors.outgoing,
+                },
+              ]}
+            >
+              {formatCurrency(totalIncoming - totalOutgoing)}
+            </Text>
+          </View>
+        </View>
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  container: {
+    flex: 1,
+  },
+  header: {
+    padding: 20,
+    paddingTop: 60,
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  subtitle: {
+    fontSize: 14,
+  },
+  statsContainer: {
+    paddingHorizontal: 16,
+    gap: 12,
+    paddingBottom: 8,
+  },
+  section: {
+    padding: 20,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+  },
+  viewAllButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  viewAllText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  upcomingList: {
+    gap: 0,
+  },
+  emptyCard: {
+    padding: 32,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyText: {
+    fontSize: 14,
+    marginTop: 12,
+    textAlign: 'center',
+  },
+  quickStatsCard: {
+    borderRadius: 12,
+    padding: 20,
+    marginTop: 12,
+  },
+  quickStatRow: {
+    flexDirection: 'row',
+    gap: 20,
+  },
+  quickStatItem: {
+    flex: 1,
+  },
+  quickStatHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
     marginBottom: 8,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  quickStatLabel: {
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  quickStatAmount: {
+    fontSize: 22,
+    fontWeight: '700',
+  },
+  quickStatDivider: {
+    width: 1,
+    backgroundColor: '#e5e7eb',
+  },
+  netRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+  },
+  netLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  netAmount: {
+    fontSize: 24,
+    fontWeight: '700',
   },
 });

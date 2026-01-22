@@ -27,6 +27,29 @@ export const Colors = {
   },
 };
 
+export const ChequeColors = {
+  light: {
+    incoming: '#10b981',  // Green
+    outgoing: '#ef4444',  // Red
+    overdue: '#f59e0b',   // Yellow/Amber
+    settled: '#6b7280',   // Gray
+    pending: '#3b82f6',   // Blue
+    border: '#e5e7eb',    // Light gray border
+    card: '#ffffff',      // Card background
+    cardSecondary: '#f9fafb', // Secondary card background
+  },
+  dark: {
+    incoming: '#34d399',  // Light green
+    outgoing: '#f87171',  // Light red
+    overdue: '#fbbf24',   // Light yellow/amber
+    settled: '#9ca3af',   // Light gray
+    pending: '#60a5fa',   // Light blue
+    border: '#374151',    // Dark gray border
+    card: '#1f2937',      // Card background
+    cardSecondary: '#111827', // Secondary card background
+  },
+};
+
 export const Fonts = Platform.select({
   ios: {
     /** iOS `UIFontDescriptorSystemDesignDefault` */
