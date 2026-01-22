@@ -45,7 +45,7 @@ export function Input({
           style={[
             styles.input,
             { color: colors.text },
-            icon && styles.inputWithIcon,
+            icon ? styles.inputWithIcon : undefined,
             style,
           ]}
           placeholderTextColor={colorScheme === 'dark' ? '#6b7280' : '#9ca3af'}
