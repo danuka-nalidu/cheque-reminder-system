@@ -3,12 +3,16 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
-  Platform,
+  Pressable,
 } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { Colors, ChequeColors } from '@/constants/theme';
+import { Colors, ChequeColors, BorderRadius, Shadows } from '@/constants/theme';
 import { Cheque } from '@/types/cheque.types';
 import { formatCurrency } from '@/utils/currency.utils';
 import { formatDateRelative } from '@/utils/date.utils';
@@ -23,7 +27,31 @@ export function ChequeCard({ cheque, onPress }: ChequeCardProps) {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
   const chequeColors = ChequeColors[colorScheme ?? 'light'];
+  const shadows = Shadows[colorScheme ?? 'light'];
   const borderColor = getChequeColor(cheque, colorScheme);
+
+  // Animation values
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ scale: scale.value }],
+    };
+  });
+
+  const handlePressIn = () => {
+    scale.value = withSpring(0.97, {
+      damping: 15,
+      stiffness: 300,
+    });
+  };
+
+  const handlePressOut = () => {
+    scale.value = withSpring(1, {
+      damping: 15,
+      stiffness: 300,
+    });
+  };
 
   const getStatusLabel = () => {
     switch (cheque.status) {
@@ -52,28 +80,21 @@ export function ChequeCard({ cheque, onPress }: ChequeCardProps) {
   };
 
   return (
-    <TouchableOpacity
-      style={[
-        styles.card,
-        {
-          backgroundColor: chequeColors.card,
-          borderLeftColor: borderColor,
-          ...Platform.select({
-            ios: {
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.1,
-              shadowRadius: 4,
-            },
-            android: {
-              elevation: 3,
-            },
-          }),
-        },
-      ]}
-      onPress={onPress}
-      activeOpacity={0.7}
-    >
+    <Animated.View style={animatedStyle}>
+      <Pressable
+        style={[
+          styles.card,
+          {
+            backgroundColor: chequeColors.card,
+            borderLeftColor: borderColor,
+            borderRadius: BorderRadius.medium,
+            ...shadows.medium,
+          },
+        ]}
+        onPress={onPress}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+      >
       <View style={styles.content}>
         <View style={styles.header}>
           <View style={styles.typeIconContainer}>
@@ -136,7 +157,8 @@ export function ChequeCard({ cheque, onPress }: ChequeCardProps) {
         color={colors.icon}
         style={styles.chevron}
       />
-    </TouchableOpacity>
+      </Pressable>
+    </Animated.View>
   );
 }
 

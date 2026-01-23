@@ -1,8 +1,9 @@
 import React from 'react';
-import { View, Text, StyleSheet, Platform } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { Colors, ChequeColors } from '@/constants/theme';
+import { Colors, Gradients, BorderRadius, Shadows } from '@/constants/theme';
 import { formatCurrency } from '@/utils/currency.utils';
 
 interface StatCardProps {
@@ -16,48 +17,42 @@ interface StatCardProps {
 export function StatCard({ title, count, amount, icon, color }: StatCardProps) {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
-  const chequeColors = ChequeColors[colorScheme ?? 'light'];
+  const gradients = Gradients[colorScheme ?? 'light'];
+  const shadows = Shadows[colorScheme ?? 'light'];
 
   return (
-    <View
-      style={[
-        styles.card,
-        {
-          backgroundColor: chequeColors.card,
-          ...Platform.select({
-            ios: {
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.1,
-              shadowRadius: 4,
-            },
-            android: {
-              elevation: 3,
-            },
-          }),
-        },
-      ]}
-    >
-      <View style={[styles.iconContainer, { backgroundColor: color + '20' }]}>
-        <Ionicons name={icon} size={24} color={color} />
-      </View>
+    <View style={[styles.cardWrapper, shadows.medium]}>
+      <LinearGradient
+        colors={gradients.card}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.card}
+      >
+        <View style={[styles.iconContainer, { backgroundColor: color + '20' }]}>
+          <Ionicons name={icon} size={24} color={color} />
+        </View>
 
-      <Text style={[styles.title, { color: colors.icon }]}>{title}</Text>
+        <Text style={[styles.title, { color: colors.icon }]}>{title}</Text>
 
-      <Text style={[styles.count, { color: colors.text }]}>{count}</Text>
+        <Text style={[styles.count, { color: colors.text }]}>{count}</Text>
 
-      <Text style={[styles.amount, { color: color }]}>
-        {formatCurrency(amount)}
-      </Text>
+        <Text style={[styles.amount, { color: color }]}>
+          {formatCurrency(amount)}
+        </Text>
+      </LinearGradient>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  cardWrapper: {
+    borderRadius: BorderRadius.medium,
+    overflow: 'hidden',
+  },
   card: {
-    borderRadius: 12,
     padding: 16,
     minWidth: 140,
+    borderRadius: BorderRadius.medium,
   },
   iconContainer: {
     width: 48,
