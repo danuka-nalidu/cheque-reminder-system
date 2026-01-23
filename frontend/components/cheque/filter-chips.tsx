@@ -60,7 +60,7 @@ export function FilterChips({
               style={[
                 styles.chipText,
                 {
-                  color: isActive ? '#ffffff' : colors.text,
+                  color: isActive ? '#ffffff' : colors.icon,
                 },
               ]}
             >
@@ -88,5 +88,6 @@ const styles = StyleSheet.create({
   chipText: {
     fontSize: 14,
     fontWeight: '600',
+    lineHeight: 20,
   },
 });
