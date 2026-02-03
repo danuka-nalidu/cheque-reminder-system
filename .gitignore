@@ -2,11 +2,24 @@
 
 # dependencies
 node_modules/
+**/node_modules/
 
-# Expo
-.expo/
+# Environment variables
+.env
+.env.local
+.env.*.local
+**/.env
+**/.env.local
+
+# Build output
 dist/
+build/
+backend/dist/
+backend/build/
 web-build/
+
+# Expo (Frontend)
+.expo/
 expo-env.d.ts
 
 # Native
@@ -17,27 +30,51 @@ expo-env.d.ts
 *.p12
 *.key
 *.mobileprovision
+/ios
+/android
 
 # Metro
 .metro-health-check*
 
-# debug
+# Logs
+logs/
+*.log
 npm-debug.*
 yarn-debug.*
 yarn-error.*
+lerna-debug.log*
 
 # macOS
 .DS_Store
+Thumbs.db
 *.pem
 
-# local env files
-.env*.local
-
-# typescript
+# TypeScript
 *.tsbuildinfo
+**/*.tsbuildinfo
 
-app-example
+# Testing
+coverage/
+.nyc_output/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-*
+
+# Temporary files
+app-example/
 CLAUDE.md
-# generated native folders
-/ios
-/android
+
+# Database
+*.sqlite
+*.sqlite3
+*.db
+
+# Prisma
+prisma/migrations/*/migration.sql
+.env.*.local
+prisma/*.db
+prisma/*.db-journal
